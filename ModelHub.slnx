@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ModelHub.Api/ModelHub.Api.csproj" />
+    <Project Path="src/ModelHub.Application/ModelHub.Application.csproj" />
+    <Project Path="src/ModelHub.Domain/ModelHub.Domain.csproj" />
+    <Project Path="src/ModelHub.Infrastructure/ModelHub.Infrastructure.csproj" />
+  </Folder>
+</Solution>
