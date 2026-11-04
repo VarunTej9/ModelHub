@@ -12,15 +12,11 @@ namespace ModelHub.Api.Controllers;
 
 [ApiController]
 [Route("api/investment-models")]
-public sealed class InvestmentModelsController(
-    ModelHubDbContext dbContext)
-    : ControllerBase
+public sealed class InvestmentModelsController(ModelHubDbContext dbContext) : ControllerBase
 {
     [HttpPost]
     [Authorize(Policy = "AnalystOnly")]
-    public async Task<ActionResult<InvestmentModelResponse>> CreateModel(
-        CreateInvestmentModelRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<InvestmentModelResponse>> CreateModel(CreateInvestmentModelRequest request, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
 
