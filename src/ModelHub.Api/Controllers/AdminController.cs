@@ -39,7 +39,7 @@ public sealed class AdminController(ModelHubDbContext dbContext)
             });
         }
 
-        user.Role = request.Role;
+        user.ChangeRole(AppRoles.Reviewer);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
