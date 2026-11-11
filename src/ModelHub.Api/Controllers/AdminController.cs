@@ -1,50 +1,110 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ModelHub.Domain.Authorization;
-using ModelHub.Infrastructure.Persistence;
+using ModelHub.Application.Contracts;
+using ModelHub.Application.Interfaces;
 
 namespace ModelHub.Api.Controllers;
 
 [ApiController]
-[Route("api/admin")]
+[Route("api/admin/users")]
 [Authorize(Policy = "AdminOnly")]
-public sealed class AdminController(ModelHubDbContext dbContext)
-    : ControllerBase
+public sealed class AdminController : ControllerBase
 {
-    [HttpPut("users/{userId:int}/role")]
-    public async Task<IActionResult> AssignRole(
-        int userId,
-        AssignRoleRequest request,
+    private readonly IUserManagementService _users;
+
+    public AdminController(IUserManagementService users)
+    {
+        _users = users;
+    }
+
+    [HttpPost]
+    [ProducesResponseType(
+        typeof(UserResponse),
+        StatusCodes.Status201Created)]
+    public async Task<ActionResult<UserResponse>> Create(
+        [FromBody] CreateUserRequest request,
         CancellationToken cancellationToken)
     {
-        if (!AppRoles.IsValid(request.Role))
-        {
-            return BadRequest(new
-            {
-                message = "Role must be Admin, Analyst, or Reviewer."
-            });
-        }
+        var user = await _users.CreateAsync(
+            request,
+            cancellationToken);
 
-        var user = await dbContext.Users
-            .SingleOrDefaultAsync(
-                user => user.Id == userId,
-                cancellationToken);
+        return CreatedAtAction(
+            nameof(GetById),
+            new { userId = user.Id },
+            user);
+    }
 
-        if (user is null)
-        {
-            return NotFound(new
-            {
-                message = "User not found."
-            });
-        }
+    [HttpGet]
+    public async Task<ActionResult<PagedUsersResponse>> List(
+        CancellationToken cancellationToken,
+        [FromQuery] bool? isActive = null,
+        [FromQuery, Range(1, int.MaxValue)] int page = 1,
+        [FromQuery, Range(1, 100)] int pageSize = 20)
+    {
+        var users = await _users.ListAsync(
+            isActive,
+            page,
+            pageSize,
+            cancellationToken);
 
-        user.ChangeRole(AppRoles.Reviewer);
+        return Ok(users);
+    }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+    [HttpGet("{userId:int}")]
+    public async Task<ActionResult<UserResponse>> GetById(
+        int userId,
+        CancellationToken cancellationToken)
+    {
+        var user = await _users.GetByIdAsync(
+            userId,
+            cancellationToken);
+
+        return Ok(user);
+    }
+
+    [HttpPut("{userId:int}")]
+    public async Task<ActionResult<UserResponse>> Update(
+        int userId,
+        [FromBody] UpdateUserRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await _users.UpdateAsync(
+            userId,
+            request,
+            cancellationToken);
+
+        return Ok(user);
+    }
+
+    [HttpPut("{userId:int}/role")]
+    public async Task<ActionResult<UserResponse>> ChangeRole(
+        int userId,
+        [FromBody] ChangeUserRoleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await _users.ChangeRoleAsync(
+            userId,
+            request,
+            cancellationToken);
+
+        return Ok(user);
+    }
+
+    [HttpPost("{userId:int}/deactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Deactivate(
+        int userId,
+        CancellationToken cancellationToken)
+    {
+        await _users.DeactivateAsync(
+            userId,
+            cancellationToken);
 
         return NoContent();
     }
 }
-
-public sealed record AssignRoleRequest(string Role);

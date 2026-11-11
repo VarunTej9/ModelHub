@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ModelHub.Application.Contracts;
 using ModelHub.Application.Interfaces;
@@ -17,19 +19,14 @@ public sealed class AuthController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequest request, CancellationToken cancellationToken)
-    {
-        var response = await _authService.RegisterAsync(request, cancellationToken);
-
-        return StatusCode(StatusCodes.Status201Created, response);
-    }
-
-    [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Login(
+        [FromBody] LoginRequest request,
+        CancellationToken cancellationToken)
     {
-        var response = await _authService.LoginAsync(request, cancellationToken);
+        var response = await _authService.LoginAsync(
+            request,
+            cancellationToken);
 
         return Ok(response);
     }
