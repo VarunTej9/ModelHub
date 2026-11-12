@@ -10,6 +10,7 @@ using ModelHub.Api.Middleware;
 using ModelHub.Application.Interfaces;
 using ModelHub.Infrastructure.Authentication;
 using ModelHub.Infrastructure.DependencyInjection;
+using ModelHub.Api.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -124,6 +125,9 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireRole("Reviewer"));
 });
 
+builder.Services.AddUserManagement();
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -171,6 +175,7 @@ app.UseStatusCodePages(async statusCodeContext =>
     await context.Response.WriteAsJsonAsync(response);
 });
 
+app.UseUserManagementErrors();
 app.UseAuthentication();
 app.UseAuthorization();
 
