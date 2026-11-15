@@ -33,10 +33,16 @@ public sealed class InvestmentModelsController(ModelHubDbContext dbContext) : Co
             });
         }
 
+        var riskLevel = Enum.Parse<RiskLevel>(
+            request.RiskLevel,
+            ignoreCase: false);
+
         var model = new InvestmentModel(
             request.Name.Trim(),
             request.Description,
+            riskLevel,
             userId.Value);
+
 
         dbContext.InvestmentModels.Add(model);
 
